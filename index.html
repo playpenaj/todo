@@ -119,6 +119,14 @@ tr.done{opacity:.65}
 .banner{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:14px;display:none}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:#111827;color:#fff;padding:10px 16px;border-radius:9px;font-size:14px;display:none;z-index:90}
 #pop{z-index:70}
+.stsel{font:inherit;font-size:12px;font-weight:700;border-radius:99px;border:1px solid transparent;padding:4px 8px;cursor:pointer;max-width:130px}
+.stsel.ns,.st.ns{background:#eef2f7;color:#475569}
+.stsel.ip,.st.ip{background:#fef3c7;color:#b45309}
+.stsel.cp,.st.cp{background:#dcfce7;color:#15803d}
+.stsel.cx,.st.cx{background:#fee2e2;color:#b91c1c}
+.st{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap}
+.pct{margin:12px 0 0;font-size:13px;color:var(--muted)}
+.more{font-size:12px;color:var(--muted);padding:6px 0}
 </style>
 </head>
 <body>
@@ -146,7 +154,7 @@ tr.done{opacity:.65}
     <div class="body">
       <div class="tools">
         <input type="search" id="q" placeholder="Search tasks or comments…">
-        <select id="fStatus"><option value="open">Open</option><option value="done">Completed</option><option value="">All</option></select>
+        <select id="fStatus"><option value="open">Open tasks</option><option value="">All statuses</option><option>Not started</option><option>In progress</option><option>Completed</option><option>Cancelled</option></select>
         <select id="fSort">
           <option value="due">Sort: Due date</option>
           <option value="prio">Sort: Priority (high first)</option>
@@ -156,6 +164,11 @@ tr.done{opacity:.65}
       </div>
       <div id="list"></div>
     </div>
+  </details>
+
+  <details class="sec" open>
+    <summary>Status Summary <small>not started, in progress, completed, cancelled</small></summary>
+    <div class="body"><div class="grid2"><div><h4 class="t">Tasks by status</h4><div id="d4chart"></div><p class="pct" id="d4pct"></p></div><div id="d4list"></div></div></div>
   </details>
 
   <details class="sec" open>
@@ -198,11 +211,16 @@ tr.done{opacity:.65}
       <div class="field"><label>Record date</label><input type="date" id="f_rec" required></div>
       <div class="field"><label>Due date</label><input type="date" id="f_due"></div>
     </div>
-    <div class="field"><label>Repeat</label>
-      <select id="f_rep">
+    <div class="two">
+      <div class="field"><label>Status</label>
+        <select id="f_status"><option>Not started</option><option>In progress</option><option>Completed</option><option>Cancelled</option></select>
+      </div>
+      <div class="field"><label>Repeat</label>
+        <select id="f_rep">
         <option value="none">Does not repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option>
         <option value="biweekly">Every 2 weeks</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option>
       </select>
+      </div>
     </div>
     <div class="field"><label>Comments</label><textarea id="f_com" rows="3" placeholder="Notes, links, context…"></textarea></div>
     <div class="mact">
@@ -241,6 +259,10 @@ const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>
 const daysTo = t => t.due_date ? dayNum(t.due_date)-dayNum(todayStr()) : null;
 const age = t => Math.max(0, dayNum(todayStr())-dayNum(t.record_date));
 const starsHtml = n => `<span class="stars" title="${n} of 5">${'★'.repeat(n)}<span class="off">${'★'.repeat(5-n)}</span></span>`;
+const STATUSES=['Not started','In progress','Completed','Cancelled'];
+const ST_CLS={'Not started':'ns','In progress':'ip','Completed':'cp','Cancelled':'cx'};
+const isClosed = s => s==='Completed'||s==='Cancelled';
+const stChip = t => `<span class="st ${ST_CLS[t.status]||'ns'}">${t.status}</span>`;
 const REC = {none:'',daily:'Daily',weekly:'Weekly',biweekly:'Every 2 weeks',monthly:'Monthly',yearly:'Yearly'};
 const recChip = t => REC[t.recurrence] ? `<span class="rec">🔁 ${REC[t.recurrence]}</span>` : '';
 function dueHtml(t){
@@ -293,43 +315,50 @@ async function load(){
       ? '<b>The database isn’t set up (or is out of date).</b> Run <code>setup_taskboard.sql</code> in Supabase → SQL Editor, then refresh.'
       : `<b>Couldn’t reach the database:</b> ${esc(error.message)}`;
     tasks=[];
-  } else { b.style.display='none'; tasks=data||[]; }
+  } else { b.style.display='none'; tasks=(data||[]).map(t=>{ const st=t.status||(t.done?'Completed':'Not started'); return {...t,status:st,done:isClosed(st)}; }); }
   renderAll();
   if($('pop').classList.contains('show')) renderPop();
   if(!error && !popShown){ popShown=true; openPop(false); }
 }
+async function spawnNext(t){
+  if(!t.recurrence||t.recurrence==='none'||!t.due_date||t.recur_spawned) return null;
+  const nx=nextDue(t);
+  const {error}=await sb.from(TABLE).insert({
+    task_name:t.task_name, category:t.category, priority:t.priority, record_date:todayStr(), due_date:nx,
+    comments:t.comments, recurrence:t.recurrence, status:'Not started', done:false, device_id:DEVICE_ID
+  });
+  if(error){ toast('Could not create next occurrence: '+error.message); return null; }
+  toast(`Completed. Next ${REC[t.recurrence].toLowerCase()} task due ${fmt(nx)}`);
+  return nx;
+}
 async function save(e){
   e.preventDefault();
-  const rep=$('f_rep').value, due=$('f_due').value||null;
+  const rep=$('f_rep').value, due=$('f_due').value||null, st=$('f_status').value;
   if(rep!=='none' && !due){ toast('A repeating task needs a due date'); return; }
   const row = {
     task_name:$('f_name').value.trim(), category:$('f_cat').value, priority:prio,
-    record_date:$('f_rec').value, due_date:due, recurrence:rep,
+    record_date:$('f_rec').value, due_date:due, recurrence:rep, status:st, done:isClosed(st),
     comments:$('f_com').value.trim()||null, device_id:DEVICE_ID
   };
   $('saveBtn').disabled=true;
+  if(editId){
+    const old=tasks.find(x=>x.id===editId);
+    if(st==='Completed' && old && old.status!=='Completed' && await spawnNext({...old,...row})) row.recur_spawned=true;
+  }
   const {error} = await (editId ? sb.from(TABLE).update(row).eq('id',editId) : sb.from(TABLE).insert(row));
   $('saveBtn').disabled=false;
   if(error){toast('Save failed: '+error.message);return;}
   closeForm(); toast(editId?'Task updated':'Task added'); load();
 }
-async function toggle(id,val){
+async function setStatus(id,st){
   const t=tasks.find(x=>x.id===id); if(!t) return;
-  const patch={done:val};
-  if(val && t.recurrence && t.recurrence!=='none' && t.due_date && !t.recur_spawned){
-    const nx=nextDue(t);
-    const {error:ie}=await sb.from(TABLE).insert({
-      task_name:t.task_name, category:t.category, priority:t.priority, record_date:todayStr(), due_date:nx,
-      comments:t.comments, recurrence:t.recurrence, device_id:DEVICE_ID
-    });
-    if(ie){ toast('Could not create next occurrence: '+ie.message); load(); return; }
-    patch.recur_spawned=true;
-    toast(`Done. Next ${REC[t.recurrence].toLowerCase()} task due ${fmt(nx)}`);
-  }
+  const patch={status:st,done:isClosed(st)};
+  if(st==='Completed' && t.status!=='Completed' && await spawnNext(t)) patch.recur_spawned=true;
   const {error}=await sb.from(TABLE).update(patch).eq('id',id);
   if(error) toast(error.message);
   load();
 }
+const toggle = (id,val) => setStatus(id, val?'Completed':'Not started');
 async function del(id){
   if(!confirm('Delete this task?')) return;
   const {error}=await sb.from(TABLE).delete().eq('id',id);
@@ -349,6 +378,7 @@ function openForm(id){
   $('f_rec').value=t?t.record_date:todayStr();
   $('f_due').value=t?.due_date||'';
   $('f_rep').value=t?.recurrence||'none';
+  $('f_status').value=t?t.status:'Not started';
   $('f_com').value=t?.comments||'';
   prio=t?t.priority:3; drawStars();
   closePop();
@@ -362,7 +392,7 @@ $('f_rep').addEventListener('change',()=>{ if($('f_rep').value!=='none' && !$('f
 const dueSoon = () => tasks.filter(t=>!t.done && t.due_date && daysTo(t)<=7).sort((a,b)=>a.due_date.localeCompare(b.due_date)||b.priority-a.priority);
 function renderPop(){
   const l=dueSoon();
-  const row=t=>`<div class="mini" style="cursor:default"><div>${esc(t.task_name)} ${recChip(t)}<small><span class="chip ${t.category}">${t.category}</span> · due ${fmt(t.due_date)}</small></div>
+  const row=t=>`<div class="mini" style="cursor:default"><div>${esc(t.task_name)} ${recChip(t)}<small><span class="chip ${t.category}">${t.category}</span> ${stChip(t)} · due ${fmt(t.due_date)}</small></div>
     <div style="text-align:right">${starsHtml(t.priority)}<br>${dueHtml(t)}<br><button class="btn ghost sm" style="margin-top:4px" onclick="toggle(${t.id},true)">✓ Done</button></div></div>`;
   const groups=[['Overdue',x=>daysTo(x)<0,'over'],['Due today',x=>daysTo(x)===0,''],['Upcoming · next 7 days',x=>daysTo(x)>0,'']];
   const over=l.filter(x=>daysTo(x)<0).length, td=l.filter(x=>daysTo(x)===0).length, up=l.length-over-td;
@@ -377,7 +407,7 @@ $('pop').addEventListener('click',e=>{ if(e.target.id==='pop') closePop(); });
 /* ---------- render ---------- */
 const vis = () => tasks.filter(t=>t.category===tab);
 const bars = rows => { const m=Math.max(1,...rows.map(r=>r[1])); return rows.map(([l,n,c])=>`<div class="row"><span>${l}</span><div class="track"><div class="fill" style="width:${n/m*100}%;${c?`background:${c}`:''}"></div></div><span class="n">${n}</span></div>`).join(''); };
-const mini = t => `<div class="mini" onclick="openForm(${t.id})"><div>${t.done?'✅ ':''}${esc(t.task_name)} ${recChip(t)}<small>due ${fmt(t.due_date)}</small></div><div style="text-align:right">${starsHtml(t.priority)}<br>${dueHtml(t)}</div></div>`;
+const mini = t => `<div class="mini" onclick="openForm(${t.id})"><div>${t.status==='Completed'?'✅ ':t.status==='Cancelled'?'🚫 ':''}${esc(t.task_name)} ${recChip(t)}<small>${stChip(t)} due ${fmt(t.due_date)}</small></div><div style="text-align:right">${starsHtml(t.priority)}<br>${dueHtml(t)}</div></div>`;
 const GREEN='linear-gradient(90deg,#22c55e,#16a34a)', AMBER='linear-gradient(90deg,#f59e0b,#d97706)', RED='linear-gradient(90deg,#ef4444,#dc2626)';
 
 function renderHead(){
@@ -389,22 +419,21 @@ function renderHead(){
   $('bellN').textContent=n||''; $('bellN').classList.toggle('z',!n);
 }
 function renderKpis(){
-  const open=vis().filter(t=>!t.done);
+  const v=vis(), open=v.filter(t=>!t.done);
   const over=open.filter(t=>daysTo(t)!==null&&daysTo(t)<0).length;
   const due0=open.filter(t=>daysTo(t)===0).length;
   const wk=open.filter(t=>{const d=daysTo(t);return d!==null&&d>=0&&d<=7}).length;
-  const hi=open.filter(t=>t.priority>=4).length;
   $('kpis').innerHTML=`
     <div class="kpi"><b>${open.length}</b><span>Open</span></div>
+    <div class="kpi warn"><b>${v.filter(t=>t.status==='In progress').length}</b><span>In progress</span></div>
     <div class="kpi bad"><b>${over}</b><span>Overdue</span></div>
     <div class="kpi warn"><b>${due0}</b><span>Due today</span></div>
-    <div class="kpi warn"><b>${wk}</b><span>Next 7 days</span></div>
-    <div class="kpi"><b>${hi}</b><span>High priority 4–5★</span></div>
-    <div class="kpi ok"><b>${vis().filter(t=>t.done).length}</b><span>Completed</span></div>`;
+    <div class="kpi"><b>${wk}</b><span>Next 7 days</span></div>
+    <div class="kpi ok"><b>${v.filter(t=>t.status==='Completed').length}</b><span>Completed</span></div>`;
 }
 function renderBoard(){
   const q=$('q').value.toLowerCase(), fs=$('fStatus').value, so=$('fSort').value, far=1e9;
-  let r=vis().filter(t=>(fs===''||(fs==='done')===t.done)&&(!q||(t.task_name+' '+(t.comments||'')).toLowerCase().includes(q)));
+  let r=vis().filter(t=>(fs===''||(fs==='open'?!t.done:t.status===fs))&&(!q||(t.task_name+' '+(t.comments||'')).toLowerCase().includes(q)));
   r.sort((a,b)=>{
     if(so==='prio') return b.priority-a.priority || (daysTo(a)??far)-(daysTo(b)??far);
     if(so==='new') return b.record_date.localeCompare(a.record_date) || b.id-a.id;
@@ -413,10 +442,11 @@ function renderBoard(){
   });
   if(!r.length){ $('list').innerHTML=`<div class="empty">No ${tab.toLowerCase()} tasks here. Tap <b>＋</b> to add one.</div>`; return; }
   $('list').innerHTML=`<table><thead><tr>
-    <th></th><th>Task</th><th>Priority</th><th>Record date</th><th>Due date</th><th>Days to due</th><th>Days on board</th><th>Comments</th><th></th></tr></thead><tbody>`+
+    <th></th><th>Task</th><th>Status</th><th>Priority</th><th>Record date</th><th>Due date</th><th>Days to due</th><th>Days on board</th><th>Comments</th><th></th></tr></thead><tbody>`+
   r.map(t=>`<tr class="${t.done?'done':''}">
     <td class="nolabel"><input type="checkbox" class="chk" ${t.done?'checked':''} onchange="toggle(${t.id},this.checked)" aria-label="Done"></td>
     <td class="name nolabel">${esc(t.task_name)}${recChip(t)}</td>
+    <td data-l="Status"><select class="stsel ${ST_CLS[t.status]||'ns'}" onchange="setStatus(${t.id},this.value)" aria-label="Status">${STATUSES.map(s=>`<option${s===t.status?' selected':''}>${s}</option>`).join('')}</select></td>
     <td data-l="Priority">${starsHtml(t.priority)}</td>
     <td data-l="Recorded">${fmt(t.record_date)}</td>
     <td data-l="Due">${fmt(t.due_date)}</td>
@@ -449,7 +479,19 @@ function renderAdded(){
   const keys=Object.keys(g).sort().reverse();
   $('d1list').innerHTML=keys.length?keys.map(k=>`<div class="grp"><h4><span>${fmt(k)}</span><span>${g[k].length} task${g[k].length>1?'s':''} · ${today-dayNum(k)} d ago</span></h4>${g[k].map(mini).join('')}</div>`).join(''):'<div class="empty">No tasks yet</div>';
 }
-function renderAll(){ renderHead(); renderKpis(); renderBoard(); renderDue(); renderPrio(); renderAdded(); }
+function renderStatus(){
+  const v=vis(), cnt=s=>v.filter(t=>t.status===s).length;
+  const col={'Not started':'#94a3b8','In progress':'linear-gradient(90deg,#f59e0b,#d97706)','Completed':GREEN,'Cancelled':RED};
+  $('d4chart').innerHTML=bars(STATUSES.map(s=>[s,cnt(s),col[s]]));
+  const base=v.length-cnt('Cancelled');
+  $('d4pct').textContent=base?`${Math.round(cnt('Completed')/base*100)}% complete (${cnt('Completed')} of ${base}, cancelled tasks excluded)`:'No tasks yet';
+  const CAP=8;
+  $('d4list').innerHTML=STATUSES.map(s=>{
+    const a=v.filter(t=>t.status===s).sort((x,y)=>(x.due_date||'9999').localeCompare(y.due_date||'9999')||y.priority-x.priority);
+    return a.length?`<div class="grp"><h4><span>${s}</span><span>${a.length}</span></h4>${a.slice(0,CAP).map(mini).join('')}${a.length>CAP?`<div class="more">+ ${a.length-CAP} more in the Task Board</div>`:''}</div>`:'';
+  }).join('')||'<div class="empty">No tasks yet</div>';
+}
+function renderAll(){ renderHead(); renderKpis(); renderBoard(); renderStatus(); renderDue(); renderPrio(); renderAdded(); }
 
 /* ---------- wiring ---------- */
 function setTab(t){
