@@ -119,6 +119,26 @@ tr.done{opacity:.65}
 .banner{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:14px;display:none}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:#111827;color:#fff;padding:10px 16px;border-radius:9px;font-size:14px;display:none;z-index:90}
 #pop{z-index:70}
+#auth{min-height:100vh;display:none;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,var(--navy),var(--navy2))}
+body:not(.in) #auth{display:flex}
+body:not(.in) header,body:not(.in) main,body:not(.in) .fab{display:none}
+.acard{background:#fff;border-radius:16px;padding:26px;width:100%;max-width:400px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.acard .logo{color:var(--navy);margin-bottom:16px}
+.acard .logo i{background:var(--navy);color:#fff}
+.acard .sub{color:var(--muted)}
+.atabs{display:flex;background:#eef2f8;border-radius:10px;padding:4px;margin-bottom:16px;gap:4px}
+.atabs button{flex:1;border:0;background:none;padding:8px 4px;border-radius:7px;font-weight:600;font-size:13px;cursor:pointer;color:var(--muted)}
+.atabs button.on{background:#fff;color:var(--navy);box-shadow:var(--shadow)}
+.amsg{display:none;padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:12px;background:#fef2f2;color:#b91c1c}
+.amsg.ok{background:#f0fdf4;color:#166534}
+.amsg.show{display:block}
+.acard form{display:none}.acard form.on{display:block}
+.acard .btn{width:100%;justify-content:center;padding:11px}
+.hint{font-size:12px;color:var(--muted);margin:-4px 0 12px}
+.astat{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:18px;font-size:12px;color:var(--muted)}
+.userbtn{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:9px;padding:8px 12px;font-weight:600;cursor:pointer;font-size:13px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+.acard .field input,.modal .field input{width:100%}
 .stsel{font:inherit;font-size:12px;font-weight:700;border-radius:99px;border:1px solid transparent;padding:4px 8px;cursor:pointer;max-width:130px}
 .stsel.ns,.st.ns{background:#eef2f7;color:#475569}
 .stsel.ip,.st.ip{background:#fef3c7;color:#b45309}
@@ -159,12 +179,62 @@ tr.done{opacity:.65}
 </style>
 </head>
 <body>
+<div id="auth">
+  <div class="acard">
+    <div class="logo"><i>✔</i><div>TaskBoard<div class="sub">Planner &amp; reminders</div></div></div>
+    <div class="atabs">
+      <button data-t="in" class="on" type="button">Sign in</button>
+      <button data-t="reg" type="button">Register</button>
+      <button data-t="rst" type="button">Forgot password</button>
+    </div>
+    <div class="amsg" id="amsg"></div>
+
+    <form id="f_in" class="on">
+      <div class="field"><label>User ID</label><input id="li_user" required autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+      <div class="field"><label>Password</label><input type="password" id="li_pass" required autocomplete="current-password"></div>
+      <button class="btn">Sign in</button>
+    </form>
+
+    <form id="f_reg">
+      <div class="field"><label>Choose a user ID</label><input id="rg_user" required autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="e.g. ajesh"></div>
+      <p class="hint">3–30 characters: letters, numbers, . _ -</p>
+      <div class="field"><label>Password</label><input type="password" id="rg_pass" required minlength="6" autocomplete="new-password"></div>
+      <div class="field"><label>Confirm password</label><input type="password" id="rg_pass2" required minlength="6" autocomplete="new-password"></div>
+      <button class="btn">Create account</button>
+    </form>
+
+    <form id="f_rst">
+      <div class="field"><label>User ID</label><input id="rs_user" required autocomplete="username" autocapitalize="none" spellcheck="false"></div>
+      <div class="field"><label>New password</label><input type="password" id="rs_pass" required minlength="6" autocomplete="new-password"></div>
+      <div class="field"><label>Confirm new password</label><input type="password" id="rs_pass2" required minlength="6" autocomplete="new-password"></div>
+      <button class="btn">Reset password</button>
+      <p class="hint" style="margin:10px 0 0">If the user ID exists, its password is replaced.</p>
+    </form>
+
+    <div class="astat"><span class="dot" id="dot2"></span><span id="ctext2">Checking…</span></div>
+  </div>
+</div>
+
+<div class="ov" id="acct"><div class="modal">
+  <h2>Account</h2>
+  <p class="lead">Signed in as <b id="who"></b></p>
+  <form id="cp">
+    <div class="field"><label>Change password</label><input type="password" id="cp_pass" required minlength="6" autocomplete="new-password" placeholder="New password"></div>
+    <button class="btn sm">Update password</button>
+  </form>
+  <div class="mact" style="margin-top:18px">
+    <button class="btn danger" type="button" onclick="sb.auth.signOut()">Sign out</button>
+    <button class="btn ghost" type="button" onclick="$('acct').classList.remove('show')">Close</button>
+  </div>
+</div></div>
+
 <header>
   <div class="bar">
     <div class="logo"><i>✔</i><div>TaskBoard<div class="sub">Planner &amp; reminders</div></div></div>
     <div class="spacer"></div>
     <div class="conn" title="Database connection"><span class="dot" id="dot"></span><span id="ctext" class="hidem">Checking…</span></div>
     <button class="bell" onclick="openPop(true)">🔔 <span class="hidem">Due soon</span><b id="bellN"></b></button>
+    <button class="userbtn" onclick="openAcct()">👤 <span id="uname"></span></button>
     <button class="btn hidem" onclick="openForm()">＋ New task</button>
   </div>
   <div class="tabs">
@@ -267,16 +337,9 @@ const SUPABASE_URL = "https://gdvbplbqehrtrgiwwcja.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkdmJwbGJxZWhydHJnaXd3Y2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyMzExOTEsImV4cCI6MjEwNTgwNzE5MX0.w61-EWRvERE2QzXTKMifXp63Pqq5BFgMDKx99k3LPkY";
 const TABLE = "taskboard_todos";
 
-/* Login is off: data is tied to a device ID kept in this browser (not shown in the UI). */
-const DEVICE_KEY = "taskboard_device_id";
-const newId = () => (window.crypto&&crypto.randomUUID) ? crypto.randomUUID() : 'dev-'+Date.now().toString(36)+Math.random().toString(36).slice(2,12);
-let DEVICE_ID;
-try{ DEVICE_ID = localStorage.getItem(DEVICE_KEY); if(!DEVICE_ID){ DEVICE_ID=newId(); localStorage.setItem(DEVICE_KEY,DEVICE_ID); } }
-catch(e){ DEVICE_ID=newId(); }
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  global:{ headers:{ 'x-device-id': DEVICE_ID } },
-  auth:{ persistSession:false, autoRefreshToken:false, detectSessionInUrl:false }
-});
+const DEVICE_KEY = "taskboard_device_id"; // only read, to move older device-mode tasks into the account
+let LEGACY_DEVICE=null; try{ LEGACY_DEVICE=localStorage.getItem(DEVICE_KEY); }catch(e){}
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let tasks=[], editId=null, prio=3, tab='Work', popShown=false;
 try{ const t=localStorage.getItem('taskboard_tab'); if(t==='Work'||t==='Personal') tab=t; }catch(e){}
@@ -326,7 +389,7 @@ function nextDue(t){
 }
 
 /* ---------- connection light ---------- */
-function setConn(ok){ $('dot').classList.toggle('on',ok); $('ctext').textContent=ok?'Connected':'Offline'; }
+function setConn(ok){ ['dot','dot2'].forEach(i=>$(i).classList.toggle('on',ok)); ['ctext','ctext2'].forEach(i=>$(i).textContent=ok?'Connected':'Offline'); }
 async function checkConn(){
   if(!navigator.onLine){setConn(false);return;}
   try{ const {error}=await sb.rpc('taskboard_ping'); setConn(!error||error.code==='PGRST202'); }
@@ -356,7 +419,7 @@ async function spawnNext(t){
   const nx=nextDue(t);
   const {error}=await sb.from(TABLE).insert({
     task_name:t.task_name, category:t.category, priority:t.priority, record_date:todayStr(), due_date:nx,
-    comments:t.comments, recurrence:t.recurrence, status:'Not started', done:false, device_id:DEVICE_ID
+    comments:t.comments, recurrence:t.recurrence, status:'Not started', done:false
   });
   if(error){ toast('Could not create next occurrence: '+error.message); return null; }
   toast(`Completed. Next ${REC[t.recurrence].toLowerCase()} task due ${fmt(nx)}`);
@@ -369,7 +432,7 @@ async function save(e){
   const row = {
     task_name:$('f_name').value.trim(), category:$('f_cat').value, priority:prio,
     record_date:$('f_rec').value, due_date:due, recurrence:rep, status:st, done:isClosed(st),
-    comments:$('f_com').value.trim()||null, device_id:DEVICE_ID
+    comments:$('f_com').value.trim()||null
   };
   $('saveBtn').disabled=true;
   if(editId){
@@ -596,7 +659,73 @@ document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.d
 if(window.innerWidth<=820) document.querySelectorAll('details.sec').forEach((d,i)=>{ if(i>=3) d.open=false; });
 checkConn(); setInterval(checkConn,20000);
 setInterval(()=>{ if(tasks.length) renderAll(); },60*60*1000);
-load();
+/* ---------- login ---------- */
+const toEmail = u => `${u}@taskboard.app`; // user IDs map to userid@taskboard.app; no email is ever sent
+const uid = v => (v||'').trim().toLowerCase();
+const okName = v => /^[a-z0-9._-]{3,30}$/.test(v);
+function amsg(t,ok){const m=$('amsg');m.textContent=t||'';m.className='amsg'+(ok?' ok':'')+(t?' show':'');}
+function authTab(t){
+  document.querySelectorAll('.atabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  ['in','reg','rst'].forEach(x=>$('f_'+x).classList.toggle('on',x===t)); amsg('');
+}
+document.querySelectorAll('.atabs button').forEach(b=>b.onclick=()=>authTab(b.dataset.t));
+function openAcct(){ closePop(); $('acct').classList.add('show'); }
+$('acct').addEventListener('click',e=>{ if(e.target.id==='acct') $('acct').classList.remove('show'); });
+
+$('f_in').onsubmit=async e=>{
+  e.preventDefault(); amsg('');
+  const {error}=await sb.auth.signInWithPassword({email:toEmail(uid($('li_user').value)),password:$('li_pass').value});
+  if(error) amsg(/invalid|credentials/i.test(error.message)?'Wrong user ID or password.':error.message);
+  else $('li_pass').value='';
+};
+$('f_reg').onsubmit=async e=>{
+  e.preventDefault(); amsg('');
+  const u=uid($('rg_user').value), p=$('rg_pass').value;
+  if(!okName(u)) return amsg('User ID: 3–30 characters, letters, numbers, . _ - only.');
+  if(p.length<6) return amsg('Password must be at least 6 characters.');
+  if(p!==$('rg_pass2').value) return amsg('Passwords don’t match.');
+  const {data,error}=await sb.auth.signUp({email:toEmail(u),password:p});
+  if(error) return amsg(/registered|exists/i.test(error.message)?'That user ID is already taken.':error.message);
+  if(!data.session) return amsg('Account created, but sign-in is blocked. In Supabase turn off Authentication → Providers → Email → “Confirm email”.');
+  $('rg_pass').value=$('rg_pass2').value='';
+};
+$('f_rst').onsubmit=async e=>{
+  e.preventDefault(); amsg('');
+  const u=uid($('rs_user').value), p=$('rs_pass').value;
+  if(p.length<6) return amsg('New password must be at least 6 characters.');
+  if(p!==$('rs_pass2').value) return amsg('Passwords don’t match.');
+  const {data,error}=await sb.rpc('taskboard_reset_password',{p_username:u,p_new_password:p});
+  if(error) return amsg(error.message);
+  if(!data) return amsg('No account with that user ID.');
+  $('li_user').value=u; $('rs_pass').value=$('rs_pass2').value='';
+  authTab('in'); amsg('Password updated. Sign in with your new password.',true);
+};
+$('cp').onsubmit=async e=>{
+  e.preventDefault();
+  const {error}=await sb.auth.updateUser({password:$('cp_pass').value});
+  toast(error?error.message:'Password changed'); if(!error) $('cp_pass').value='';
+};
+
+async function claimLegacy(){
+  if(!LEGACY_DEVICE) return;
+  const {data,error}=await sb.rpc('taskboard_claim_device_tasks',{p_device:LEGACY_DEVICE});
+  if(!error){ try{localStorage.removeItem(DEVICE_KEY);}catch(e){} LEGACY_DEVICE=null; if(data>0) toast(`${data} earlier task${data>1?'s':''} added to your account`); }
+}
+let curUser=null;
+sb.auth.onAuthStateChange((ev,s)=>{
+  if(!s){
+    curUser=null; tasks=[]; popShown=false;
+    document.body.classList.remove('in');
+    document.querySelectorAll('.ov').forEach(o=>o.classList.remove('show'));
+    return;
+  }
+  if(curUser===s.user.id) return;
+  curUser=s.user.id;
+  const n=(s.user.email||'').split('@')[0];
+  $('uname').textContent=n; $('who').textContent=n;
+  document.body.classList.add('in');
+  setTimeout(async()=>{ await claimLegacy(); load(); },0);
+});
 </script>
 </body>
 </html>
