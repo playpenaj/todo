@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f2a47">
-<title>TaskBoard – Work & Personal</title>
+<title>TaskBoard – Planner & Reminders</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
@@ -15,43 +15,58 @@
 *{box-sizing:border-box}
 html,body{margin:0}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.45;-webkit-text-size-adjust:100%}
-header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:14px 20px calc(0px);position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.18)}
-.bar{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-bottom:10px}
+header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:14px 20px 0;position:sticky;top:0;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.bar{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-bottom:10px}
 .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:19px;letter-spacing:.2px}
 .logo i{width:32px;height:32px;border-radius:9px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-style:normal}
 .sub{font-size:12px;opacity:.75;font-weight:400}
 .spacer{flex:1}
 .today{font-size:13px;opacity:.85}
-nav{max-width:1280px;margin:0 auto;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
-nav::-webkit-scrollbar{display:none}
-nav button{background:none;border:0;color:#cbd9ec;padding:10px 16px;font-size:14px;font-weight:600;cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap}
-nav button.on{color:#fff;border-color:#60a5fa}
+.conn{display:flex;align-items:center;gap:7px;font-size:12px;opacity:.9}
+.dot{width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.25);display:inline-block;flex:none}
+.dot.on{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.25)}
+.bell{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:9px;padding:8px 12px;font-weight:600;cursor:pointer;font-size:13px}
+.bell b{background:#ef4444;border-radius:99px;padding:1px 7px;margin-left:4px;font-size:12px}
+.bell b:empty,.bell b.z{display:none}
+.tabs{max-width:1280px;margin:0 auto;display:flex;gap:4px}
+.tabs button{background:none;border:0;color:#cbd9ec;padding:11px 22px;font-size:16px;font-weight:700;cursor:pointer;border-bottom:3px solid transparent;display:flex;align-items:center;gap:8px}
+.tabs button.on{color:#fff;border-color:#60a5fa}
+.tabs .n{background:rgba(255,255,255,.18);border-radius:99px;font-size:12px;padding:1px 8px;font-weight:600}
 main{max-width:1280px;margin:0 auto;padding:18px 16px 90px}
+.hello{margin:0 0 14px}
+.hello h1{margin:0;font-size:22px}
+.hello p{margin:2px 0 0;color:var(--muted);font-size:14px}
 .btn{background:var(--accent);color:#fff;border:0;border-radius:9px;padding:9px 16px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
 .btn:hover{filter:brightness(1.08)}
 .btn.ghost{background:#fff;color:var(--text);border:1px solid var(--line)}
 .btn.danger{background:#fff;color:var(--bad);border:1px solid #f3c4c4}
 .btn.sm{padding:6px 10px;font-size:13px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
-.kpi{background:var(--card);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);border-left:4px solid var(--accent)}
-.kpi b{display:block;font-size:26px;line-height:1.1}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border-radius:var(--radius);padding:12px 16px;box-shadow:var(--shadow);border-left:4px solid var(--accent)}
+.kpi b{display:block;font-size:24px;line-height:1.1}
 .kpi span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
 .kpi.bad{border-color:var(--bad)}.kpi.warn{border-color:var(--warn)}.kpi.ok{border-color:var(--ok)}
 .tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
 .tools input,.tools select,.field input,.field select,.field textarea{font:inherit;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--text);min-width:0}
 .tools input[type=search]{flex:1;min-width:180px}
-.panel{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px;margin-bottom:16px}
-.panel h3{margin:0 0 4px;font-size:16px}
-.panel p.h{margin:0 0 14px;color:var(--muted);font-size:13px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+details.sec{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px}
+details.sec>summary{padding:14px 16px;font-weight:700;font-size:16px;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary::after{content:"▾";color:var(--muted);transition:transform .15s}
+details.sec:not([open])>summary::after{transform:rotate(-90deg)}
+details.sec>summary small{font-weight:400;color:var(--muted);font-size:13px;margin-left:10px;flex:1}
+.body{padding:0 16px 16px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 @media(max-width:900px){.grid2{grid-template-columns:1fr}}
-table{width:100%;border-collapse:collapse;background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.body h4.t{margin:0 0 8px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:var(--radius);overflow:hidden}
 th{background:#f7f9fc;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:11px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
 td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top}
 tr:last-child td{border-bottom:0}
 tr.done td.name{text-decoration:line-through;color:var(--muted)}
 tr.done{opacity:.65}
 .name{font-weight:600;min-width:160px}
+.rec{display:inline-block;font-size:11px;font-weight:600;background:#ecfdf5;color:#047857;border-radius:99px;padding:1px 8px;margin-left:6px;white-space:nowrap}
 .cm{color:var(--muted);font-size:13px;max-width:260px}
 .stars{color:var(--star);letter-spacing:1px;white-space:nowrap;font-size:15px}
 .stars .off{color:#d5dbe5}
@@ -61,35 +76,38 @@ tr.done{opacity:.65}
 .d.over{color:var(--bad)}.d.soon{color:var(--warn)}.d.fine{color:var(--ok)}.d.none{color:var(--muted);font-weight:400}
 .act{white-space:nowrap}
 .chk{width:20px;height:20px;accent-color:var(--ok);cursor:pointer}
-.empty{text-align:center;color:var(--muted);padding:34px 10px}
-/* mobile cards */
+.empty{text-align:center;color:var(--muted);padding:26px 10px}
 @media(max-width:820px){
   table,thead,tbody,tr,td{display:block}
   thead{display:none}
-  table{background:none;box-shadow:none}
-  tr{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:12px;padding:10px 12px;position:relative}
+  table{background:none}
+  tr{background:#fff;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:10px;padding:10px 12px}
   td{border:0;padding:5px 0;display:flex;gap:10px;justify-content:space-between;align-items:flex-start}
   td::before{content:attr(data-l);font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);flex:0 0 92px;padding-top:2px}
-  td.name{font-size:16px;padding-right:0}
+  td.name{font-size:16px}
   td.cm{max-width:none}
   td.nolabel::before{display:none}
+  header{padding:12px 14px 0}
+  .tabs button{flex:1;justify-content:center;padding:11px 8px}
+  .hidem{display:none}
 }
-/* bars */
-.row{display:grid;grid-template-columns:96px 1fr 34px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
+.row{display:grid;grid-template-columns:104px 1fr 34px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
 .track{background:#edf1f7;border-radius:6px;height:14px;overflow:hidden}
 .fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#3b82f6,#2563eb)}
 .row .n{text-align:right;font-weight:700}
 .grp{margin-top:14px}
+.grp:first-child{margin-top:0}
 .grp h4{margin:0 0 6px;font-size:13px;display:flex;justify-content:space-between;color:var(--navy2);border-bottom:1px solid var(--line);padding-bottom:5px}
-.mini{display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:14px;border-bottom:1px dashed var(--line)}
+.grp h4.over{color:var(--bad)}
+.mini{display:flex;justify-content:space-between;gap:10px;padding:7px 0;font-size:14px;border-bottom:1px dashed var(--line);cursor:pointer}
 .mini:last-child{border:0}
 .mini small{color:var(--muted);display:block}
-/* modal */
 .ov{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:flex-end;justify-content:center;z-index:50;padding:0}
 .ov.show{display:flex}
 .modal{background:#fff;width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:20px;max-height:92vh;overflow:auto}
 @media(min-width:700px){.ov{align-items:center;padding:20px}.modal{border-radius:16px}}
-.modal h2{margin:0 0 14px;font-size:18px}
+.modal h2{margin:0 0 4px;font-size:19px}
+.modal .lead{margin:0 0 14px;color:var(--muted);font-size:13px}
 .field{margin-bottom:12px;display:flex;flex-direction:column;gap:5px}
 .field label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -99,183 +117,78 @@ tr.done{opacity:.65}
 .mact{display:flex;gap:10px;justify-content:flex-end;margin-top:8px}
 .fab{position:fixed;right:18px;bottom:calc(18px + env(safe-area-inset-bottom));width:56px;height:56px;border-radius:50%;font-size:28px;box-shadow:0 6px 18px rgba(37,99,235,.45);z-index:30;padding:0;justify-content:center}
 .banner{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;padding:12px 14px;border-radius:10px;margin-bottom:14px;font-size:14px;display:none}
-.banner pre{background:#fff;border:1px solid #fed7aa;padding:10px;border-radius:8px;overflow:auto;font-size:12px;margin:8px 0 0}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:#111827;color:#fff;padding:10px 16px;border-radius:9px;font-size:14px;display:none;z-index:60}
-.view{display:none}.view.on{display:block}
-.hide-sm{}
-
-/* auth */
-#auth{min-height:100vh;display:none;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,var(--navy),var(--navy2))}
-body:not(.in) #auth{display:flex}
-body:not(.in) header,body:not(.in) main,body:not(.in) .fab{display:none}
-.acard{background:#fff;border-radius:16px;padding:26px;width:100%;max-width:400px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
-.acard .logo{color:var(--navy);margin-bottom:16px}
-.acard .logo i{background:var(--navy);color:#fff}
-.acard .sub{color:var(--muted)}
-.atabs{display:flex;background:#eef2f8;border-radius:10px;padding:4px;margin-bottom:16px;gap:4px}
-.atabs button{flex:1;border:0;background:none;padding:8px 4px;border-radius:7px;font-weight:600;font-size:13px;cursor:pointer;color:var(--muted)}
-.atabs button.on{background:#fff;color:var(--navy);box-shadow:var(--shadow)}
-.amsg{display:none;padding:9px 12px;border-radius:8px;font-size:13px;margin-bottom:12px;background:#fef2f2;color:#b91c1c}
-.amsg.ok{background:#f0fdf4;color:#166534}
-.amsg.show{display:block}
-.acard form{display:none}.acard form.on{display:block}
-.acard .btn{width:100%;justify-content:center;padding:11px}
-.hint{font-size:12px;color:var(--muted);margin:-4px 0 12px}
-.astat{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:18px;font-size:12px;color:var(--muted)}
-.dot{width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.25);display:inline-block;flex:none}
-.dot.on{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.25)}
-.conn{display:flex;align-items:center;gap:7px;font-size:12px;opacity:.9}
-.userbtn{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:9px;padding:8px 12px;font-weight:600;cursor:pointer;font-size:13px}
-.rcode{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:22px;letter-spacing:2px;text-align:center;background:#f3f5f9;border:2px dashed var(--accent);border-radius:12px;padding:16px;margin:12px 0;user-select:all;word-break:break-all}
-#rc{z-index:80}
-hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:#111827;color:#fff;padding:10px 16px;border-radius:9px;font-size:14px;display:none;z-index:90}
+#pop{z-index:70}
 </style>
 </head>
 <body>
-<div id="auth">
-  <div class="acard">
-    <div class="logo"><i>✔</i><div>TaskBoard<div class="sub">Work &amp; Personal planner</div></div></div>
-    <div class="atabs">
-      <button data-t="in" class="on" type="button">Sign in</button>
-      <button data-t="reg" type="button">Register</button>
-      <button data-t="rst" type="button">Forgot password</button>
-    </div>
-    <div class="amsg" id="amsg"></div>
-
-    <form id="f_in" class="on">
-      <div class="field"><label>Username</label><input id="li_user" required autocomplete="username" autocapitalize="none" spellcheck="false"></div>
-      <div class="field"><label>Password</label><input type="password" id="li_pass" required autocomplete="current-password"></div>
-      <button class="btn">Sign in</button>
-    </form>
-
-    <form id="f_reg">
-      <div class="field"><label>Choose a username</label><input id="rg_user" required autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="e.g. ajesh"></div>
-      <p class="hint">3–30 characters: letters, numbers, . _ -</p>
-      <div class="field"><label>Password</label><input type="password" id="rg_pass" required minlength="6" autocomplete="new-password"></div>
-      <div class="field"><label>Confirm password</label><input type="password" id="rg_pass2" required minlength="6" autocomplete="new-password"></div>
-      <button class="btn">Create account</button>
-      <p class="hint" style="margin-top:10px">You’ll get a recovery code to reset your password later. No email needed.</p>
-    </form>
-
-    <form id="f_rst">
-      <div class="field"><label>Username</label><input id="rs_user" required autocomplete="username" autocapitalize="none" spellcheck="false"></div>
-      <div class="field"><label>Recovery code</label><input id="rs_code" required autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXX-XXXX-XXXX-XXXX"></div>
-      <div class="field"><label>New password</label><input type="password" id="rs_pass" required minlength="6" autocomplete="new-password"></div>
-      <button class="btn">Reset password</button>
-    </form>
-
-    <div class="astat"><span class="dot"></span><span class="ctext">Checking…</span></div>
-  </div>
-</div>
-
-<div class="ov" id="rc"><div class="modal">
-  <h2>Save your recovery code</h2>
-  <p class="hint" style="margin:0">This is the only way to reset a forgotten password. It is shown once, so write it down or keep it in a password manager.</p>
-  <div class="rcode" id="rc_code"></div>
-  <div class="mact" style="justify-content:space-between;align-items:center">
-    <button class="btn ghost sm" type="button" onclick="copyCode()">Copy code</button>
-    <label style="font-size:14px;display:flex;gap:8px;align-items:center"><input type="checkbox" id="rc_ok" onchange="$('rc_go').disabled=!this.checked"> I’ve saved it</label>
-  </div>
-  <div class="mact"><button class="btn" id="rc_go" type="button" disabled onclick="$('rc').classList.remove('show')">Continue</button></div>
-</div></div>
-
-<div class="ov" id="dev"><div class="modal">
-  <h2>This device</h2>
-  <p class="hint" style="margin:0">Your tasks are tied to this device ID. Keep it safe: anyone with the ID can open these tasks.</p>
-  <div class="rcode" id="dev_id" style="font-size:15px"></div>
-  <div class="amsg show" id="dev_warn" style="display:none">This browser is blocking storage, so the ID will change on refresh and tasks will look lost. Copy the ID to get them back.</div>
-  <button class="btn ghost sm" type="button" onclick="copyDevice()">Copy device ID</button>
-  <hr>
-  <form onsubmit="switchDevice(event)">
-    <div class="field"><label>Open tasks from another device</label><input id="dev_new" placeholder="Paste a device ID" autocomplete="off" spellcheck="false"></div>
-    <button class="btn sm">Switch to this ID</button>
-  </form>
-  <div class="mact" style="margin-top:18px"><button class="btn ghost" type="button" onclick="$('dev').classList.remove('show')">Close</button></div>
-</div></div>
-
-<div class="ov" id="acct"><div class="modal">
-  <h2>Account</h2>
-  <p class="hint" style="margin:0 0 14px">Signed in as <b id="who"></b></p>
-  <form id="cp">
-    <div class="field"><label>Change password</label><input type="password" id="cp_pass" required minlength="6" autocomplete="new-password" placeholder="New password"></div>
-    <button class="btn sm">Update password</button>
-  </form>
-  <hr>
-  <p class="hint" style="margin:0 0 10px">A new recovery code replaces the old one.</p>
-  <button class="btn ghost sm" type="button" onclick="newRecovery()">Generate new recovery code</button>
-  <div class="mact" style="margin-top:18px">
-    <button class="btn danger" type="button" onclick="sb.auth.signOut()">Sign out</button>
-    <button class="btn ghost" type="button" onclick="$('acct').classList.remove('show')">Close</button>
-  </div>
-</div></div>
-
 <header>
   <div class="bar">
-    <div class="logo"><i>✔</i><div>TaskBoard<div class="sub">Work &amp; Personal planner</div></div></div>
+    <div class="logo"><i>✔</i><div>TaskBoard<div class="sub">Planner &amp; reminders</div></div></div>
     <div class="spacer"></div>
-    <div class="conn" title="Database connection"><span class="dot"></span><span class="ctext">Checking…</span></div>
-    <div class="today" id="today"></div>
-    <button class="userbtn" onclick="openAcct()">👤 <span id="uname"></span></button>
-    <button class="btn" onclick="openForm()">＋ New task</button>
+    <div class="conn" title="Database connection"><span class="dot" id="dot"></span><span id="ctext" class="hidem">Checking…</span></div>
+    <button class="bell" onclick="openPop(true)">🔔 <span class="hidem">Due soon</span><b id="bellN"></b></button>
+    <button class="btn hidem" onclick="openForm()">＋ New task</button>
   </div>
-  <nav>
-    <button class="on" data-v="board">Task Board</button>
-    <button data-v="bydate">Tasks by Date</button>
-    <button data-v="byprio">Priority &amp; Tasks</button>
-    <button data-v="bydue">Tasks by Due Date</button>
-  </nav>
+  <div class="tabs">
+    <button class="on" data-t="Work">Work <span class="n" id="nWork">0</span></button>
+    <button data-t="Personal">Personal <span class="n" id="nPersonal">0</span></button>
+  </div>
 </header>
 
 <main>
   <div class="banner" id="banner"></div>
+  <div class="hello"><h1 id="hi"></h1><p id="hiSub"></p></div>
   <div class="kpis" id="kpis"></div>
 
-  <!-- BOARD -->
-  <section class="view on" id="v-board">
-    <div class="tools">
-      <input type="search" id="q" placeholder="Search tasks or comments…">
-      <select id="fType"><option value="">All types</option><option>Work</option><option>Personal</option></select>
-      <select id="fStatus"><option value="open">Open</option><option value="done">Completed</option><option value="">All</option></select>
-      <select id="fSort">
-        <option value="due">Sort: Due date</option>
-        <option value="prio">Sort: Priority (high first)</option>
-        <option value="new">Sort: Recently added</option>
-        <option value="age">Sort: Oldest first</option>
-      </select>
+  <details class="sec" open>
+    <summary>Task Board <small>everything on your list</small></summary>
+    <div class="body">
+      <div class="tools">
+        <input type="search" id="q" placeholder="Search tasks or comments…">
+        <select id="fStatus"><option value="open">Open</option><option value="done">Completed</option><option value="">All</option></select>
+        <select id="fSort">
+          <option value="due">Sort: Due date</option>
+          <option value="prio">Sort: Priority (high first)</option>
+          <option value="new">Sort: Recently added</option>
+          <option value="age">Sort: Oldest first</option>
+        </select>
+      </div>
+      <div id="list"></div>
     </div>
-    <div id="list"></div>
-  </section>
+  </details>
 
-  <!-- DASHBOARD 1 -->
-  <section class="view" id="v-bydate">
-    <div class="grid2">
-      <div class="panel"><h3>Tasks added per day</h3><p class="h">Last 14 days by record date</p><div id="d1chart"></div></div>
-      <div class="panel"><h3>Tasks by record date</h3><p class="h">Grouped by the day they were added</p><div id="d1list"></div></div>
-    </div>
-  </section>
+  <details class="sec" open>
+    <summary>Task Due Date <small>your agenda, soonest first</small></summary>
+    <div class="body"><div class="grid2"><div><h4 class="t">Open tasks by due window</h4><div id="d3chart"></div></div><div id="d3list"></div></div></div>
+  </details>
 
-  <!-- DASHBOARD 2 -->
-  <section class="view" id="v-byprio">
-    <div class="grid2">
-      <div class="panel"><h3>Open tasks by priority</h3><p class="h">5 stars = most important</p><div id="d2chart"></div></div>
-      <div class="panel"><h3>Tasks by priority</h3><p class="h">Highest priority first</p><div id="d2list"></div></div>
-    </div>
-  </section>
+  <details class="sec" open>
+    <summary>Priority &amp; Tasks <small>5 stars = most important</small></summary>
+    <div class="body"><div class="grid2"><div><h4 class="t">Open tasks by priority</h4><div id="d2chart"></div></div><div id="d2list"></div></div></div>
+  </details>
 
-  <!-- DASHBOARD 3 -->
-  <section class="view" id="v-bydue">
-    <div class="grid2">
-      <div class="panel"><h3>Open tasks by due window</h3><p class="h">Where your deadlines sit</p><div id="d3chart"></div></div>
-      <div class="panel"><h3>Tasks with due dates</h3><p class="h">Soonest first</p><div id="d3list"></div></div>
-    </div>
-  </section>
+  <details class="sec">
+    <summary>Tasks by Date <small>when each task was added</small></summary>
+    <div class="body"><div class="grid2"><div><h4 class="t">Added per day · last 14 days</h4><div id="d1chart"></div></div><div id="d1list"></div></div></div>
+  </details>
 </main>
 
 <button class="btn fab" onclick="openForm()" aria-label="New task">＋</button>
 
+<!-- Due soon pop-up -->
+<div class="ov" id="pop"><div class="modal">
+  <h2 id="popT">Your planner</h2>
+  <p class="lead" id="popS"></p>
+  <div id="popList"></div>
+  <div class="mact"><button class="btn" onclick="closePop()">Got it</button></div>
+</div></div>
+
+<!-- Task form -->
 <div class="ov" id="ov">
   <form class="modal" id="form" onsubmit="save(event)">
     <h2 id="mt">New task</h2>
+    <p class="lead">&nbsp;</p>
     <div class="field"><label>Task name</label><input id="f_name" required maxlength="200" placeholder="What needs doing?"></div>
     <div class="two">
       <div class="field"><label>Type</label><select id="f_cat"><option>Work</option><option>Personal</option></select></div>
@@ -284,6 +197,12 @@ hr{border:0;border-top:1px solid var(--line);margin:16px 0}
     <div class="two">
       <div class="field"><label>Record date</label><input type="date" id="f_rec" required></div>
       <div class="field"><label>Due date</label><input type="date" id="f_due"></div>
+    </div>
+    <div class="field"><label>Repeat</label>
+      <select id="f_rep">
+        <option value="none">Does not repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option>
+        <option value="biweekly">Every 2 weeks</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option>
+      </select>
     </div>
     <div class="field"><label>Comments</label><textarea id="f_com" rows="3" placeholder="Notes, links, context…"></textarea></div>
     <div class="mact">
@@ -298,30 +217,32 @@ hr{border:0;border-top:1px solid var(--line);margin:16px 0}
 const SUPABASE_URL = "https://gdvbplbqehrtrgiwwcja.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkdmJwbGJxZWhydHJnaXd3Y2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyMzExOTEsImV4cCI6MjEwNTgwNzE5MX0.w61-EWRvERE2QzXTKMifXp63Pqq5BFgMDKx99k3LPkY";
 const TABLE = "taskboard_todos";
-const USE_LOGIN = false; // login is switched off for now: data is tied to this device's ID. Set true to bring the sign-in screen back.
+
+/* Login is off: data is tied to a device ID kept in this browser (not shown in the UI). */
 const DEVICE_KEY = "taskboard_device_id";
-function newDeviceId(){
-  if(window.crypto&&crypto.randomUUID) return crypto.randomUUID();
-  return 'dev-'+Date.now().toString(36)+Math.random().toString(36).slice(2,12);
-}
-let DEVICE_ID, deviceStored = true;
-try{ DEVICE_ID = localStorage.getItem(DEVICE_KEY); if(!DEVICE_ID){ DEVICE_ID=newDeviceId(); localStorage.setItem(DEVICE_KEY,DEVICE_ID); } }
-catch(e){ DEVICE_ID=newDeviceId(); deviceStored=false; }
+const newId = () => (window.crypto&&crypto.randomUUID) ? crypto.randomUUID() : 'dev-'+Date.now().toString(36)+Math.random().toString(36).slice(2,12);
+let DEVICE_ID;
+try{ DEVICE_ID = localStorage.getItem(DEVICE_KEY); if(!DEVICE_ID){ DEVICE_ID=newId(); localStorage.setItem(DEVICE_KEY,DEVICE_ID); } }
+catch(e){ DEVICE_ID=newId(); }
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   global:{ headers:{ 'x-device-id': DEVICE_ID } },
-  auth:{ persistSession:USE_LOGIN, autoRefreshToken:USE_LOGIN, detectSessionInUrl:false }
+  auth:{ persistSession:false, autoRefreshToken:false, detectSessionInUrl:false }
 });
 
-let tasks = [], editId = null, prio = 3;
+let tasks=[], editId=null, prio=3, tab='Work', popShown=false;
+try{ const t=localStorage.getItem('taskboard_tab'); if(t==='Work'||t==='Personal') tab=t; }catch(e){}
 const $ = id => document.getElementById(id);
 const pad = n => String(n).padStart(2,'0');
 const todayStr = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
 const dayNum = s => { const [y,m,d]=s.split('-').map(Number); return Math.round(Date.UTC(y,m-1,d)/864e5); };
+const fromNum = n => new Date(n*864e5).toISOString().slice(0,10);
 const fmt = s => s ? new Date(dayNum(s)*864e5).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric',timeZone:'UTC'}) : '—';
 const esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const daysTo = t => t.due_date ? dayNum(t.due_date)-dayNum(todayStr()) : null;
 const age = t => Math.max(0, dayNum(todayStr())-dayNum(t.record_date));
 const starsHtml = n => `<span class="stars" title="${n} of 5">${'★'.repeat(n)}<span class="off">${'★'.repeat(5-n)}</span></span>`;
+const REC = {none:'',daily:'Daily',weekly:'Weekly',biweekly:'Every 2 weeks',monthly:'Monthly',yearly:'Yearly'};
+const recChip = t => REC[t.recurrence] ? `<span class="rec">🔁 ${REC[t.recurrence]}</span>` : '';
 function dueHtml(t){
   const d = daysTo(t);
   if(d===null) return '<span class="d none">No due date</span>';
@@ -330,7 +251,36 @@ function dueHtml(t){
   if(d===0) return '<span class="d soon">Due today</span>';
   return `<span class="d ${d<=3?'soon':'fine'}">${d} d left</span>`;
 }
-function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',2600);}
+function toast(m){const t=$('toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',2800);}
+
+/* ---------- recurrence ---------- */
+function addStep(s,rec){
+  const [y,m,d]=s.split('-').map(Number);
+  if(rec==='daily') return fromNum(dayNum(s)+1);
+  if(rec==='weekly') return fromNum(dayNum(s)+7);
+  if(rec==='biweekly') return fromNum(dayNum(s)+14);
+  let ny=y, nm=m;
+  if(rec==='monthly'){ nm=m+1; if(nm>12){nm=1;ny++;} }
+  else if(rec==='yearly'){ ny=y+1; }
+  else return s;
+  const last=new Date(Date.UTC(ny,nm,0)).getUTCDate();
+  return `${ny}-${pad(nm)}-${pad(Math.min(d,last))}`;
+}
+function nextDue(t){
+  const today=todayStr(); let n=addStep(t.due_date,t.recurrence), g=0;
+  while(n<today && g++<2000) n=addStep(n,t.recurrence);
+  return n;
+}
+
+/* ---------- connection light ---------- */
+function setConn(ok){ $('dot').classList.toggle('on',ok); $('ctext').textContent=ok?'Connected':'Offline'; }
+async function checkConn(){
+  if(!navigator.onLine){setConn(false);return;}
+  try{ const {error}=await sb.rpc('taskboard_ping'); setConn(!error||error.code==='PGRST202'); }
+  catch(e){ setConn(false); }
+}
+window.addEventListener('online',checkConn);
+window.addEventListener('offline',()=>setConn(false));
 
 /* ---------- data ---------- */
 async function load(){
@@ -338,31 +288,47 @@ async function load(){
   const b = $('banner');
   if(error){
     b.style.display='block';
-    const missing = /relation|does not exist|schema cache|42P01|PGRST205/i.test(error.message+error.code);
+    const missing = /relation|does not exist|schema cache|column|42P01|42703|PGRST20/i.test(error.message+error.code);
     b.innerHTML = missing
-      ? `<b>Database not set up yet.</b> Run the <code>setup.sql</code> file in Supabase → SQL Editor, then refresh.`
+      ? '<b>The database isn’t set up (or is out of date).</b> Run <code>setup_taskboard.sql</code> in Supabase → SQL Editor, then refresh.'
       : `<b>Couldn’t reach the database:</b> ${esc(error.message)}`;
     tasks=[];
   } else { b.style.display='none'; tasks=data||[]; }
   renderAll();
+  if($('pop').classList.contains('show')) renderPop();
+  if(!error && !popShown){ popShown=true; openPop(false); }
 }
 async function save(e){
   e.preventDefault();
+  const rep=$('f_rep').value, due=$('f_due').value||null;
+  if(rep!=='none' && !due){ toast('A repeating task needs a due date'); return; }
   const row = {
     task_name:$('f_name').value.trim(), category:$('f_cat').value, priority:prio,
-    record_date:$('f_rec').value, due_date:$('f_due').value||null, comments:$('f_com').value.trim()||null
+    record_date:$('f_rec').value, due_date:due, recurrence:rep,
+    comments:$('f_com').value.trim()||null, device_id:DEVICE_ID
   };
-  if(!USE_LOGIN) row.device_id = DEVICE_ID;
   $('saveBtn').disabled=true;
-  const q = editId ? sb.from(TABLE).update(row).eq('id',editId) : sb.from(TABLE).insert(row);
-  const {error} = await q;
+  const {error} = await (editId ? sb.from(TABLE).update(row).eq('id',editId) : sb.from(TABLE).insert(row));
   $('saveBtn').disabled=false;
   if(error){toast('Save failed: '+error.message);return;}
   closeForm(); toast(editId?'Task updated':'Task added'); load();
 }
 async function toggle(id,val){
-  const {error}=await sb.from(TABLE).update({done:val}).eq('id',id);
-  if(error) toast(error.message); else load();
+  const t=tasks.find(x=>x.id===id); if(!t) return;
+  const patch={done:val};
+  if(val && t.recurrence && t.recurrence!=='none' && t.due_date && !t.recur_spawned){
+    const nx=nextDue(t);
+    const {error:ie}=await sb.from(TABLE).insert({
+      task_name:t.task_name, category:t.category, priority:t.priority, record_date:todayStr(), due_date:nx,
+      comments:t.comments, recurrence:t.recurrence, device_id:DEVICE_ID
+    });
+    if(ie){ toast('Could not create next occurrence: '+ie.message); load(); return; }
+    patch.recur_spawned=true;
+    toast(`Done. Next ${REC[t.recurrence].toLowerCase()} task due ${fmt(nx)}`);
+  }
+  const {error}=await sb.from(TABLE).update(patch).eq('id',id);
+  if(error) toast(error.message);
+  load();
 }
 async function del(id){
   if(!confirm('Delete this task?')) return;
@@ -379,48 +345,78 @@ function openForm(id){
   const t = id ? tasks.find(x=>x.id===id) : null;
   $('mt').textContent = t?'Edit task':'New task';
   $('f_name').value=t?t.task_name:'';
-  $('f_cat').value=t?t.category:'Work';
+  $('f_cat').value=t?t.category:tab;
   $('f_rec').value=t?t.record_date:todayStr();
   $('f_due').value=t?.due_date||'';
+  $('f_rep').value=t?.recurrence||'none';
   $('f_com').value=t?.comments||'';
   prio=t?t.priority:3; drawStars();
+  closePop();
   $('ov').classList.add('show'); setTimeout(()=>$('f_name').focus(),50);
 }
 function closeForm(){ $('ov').classList.remove('show'); }
 $('ov').addEventListener('click',e=>{ if(e.target.id==='ov') closeForm(); });
+$('f_rep').addEventListener('change',()=>{ if($('f_rep').value!=='none' && !$('f_due').value) $('f_due').value=$('f_rec').value||todayStr(); });
+
+/* ---------- due-soon pop-up ---------- */
+const dueSoon = () => tasks.filter(t=>!t.done && t.due_date && daysTo(t)<=7).sort((a,b)=>a.due_date.localeCompare(b.due_date)||b.priority-a.priority);
+function renderPop(){
+  const l=dueSoon();
+  const row=t=>`<div class="mini" style="cursor:default"><div>${esc(t.task_name)} ${recChip(t)}<small><span class="chip ${t.category}">${t.category}</span> · due ${fmt(t.due_date)}</small></div>
+    <div style="text-align:right">${starsHtml(t.priority)}<br>${dueHtml(t)}<br><button class="btn ghost sm" style="margin-top:4px" onclick="toggle(${t.id},true)">✓ Done</button></div></div>`;
+  const groups=[['Overdue',x=>daysTo(x)<0,'over'],['Due today',x=>daysTo(x)===0,''],['Upcoming · next 7 days',x=>daysTo(x)>0,'']];
+  const over=l.filter(x=>daysTo(x)<0).length, td=l.filter(x=>daysTo(x)===0).length, up=l.length-over-td;
+  $('popT').textContent=l.length?'Needs your attention':'You’re all clear 🎉';
+  $('popS').textContent=l.length?[over&&`${over} overdue`,td&&`${td} due today`,up&&`${up} coming up`].filter(Boolean).join(' · '):'Nothing is overdue or due in the next 7 days.';
+  $('popList').innerHTML=groups.map(([n,f,c])=>{const a=l.filter(f);return a.length?`<div class="grp"><h4 class="${c}"><span>${n}</span><span>${a.length}</span></h4>${a.map(row).join('')}</div>`:'';}).join('');
+}
+function openPop(manual){ renderPop(); if(!manual && !dueSoon().length) return; $('pop').classList.add('show'); }
+function closePop(){ $('pop').classList.remove('show'); }
+$('pop').addEventListener('click',e=>{ if(e.target.id==='pop') closePop(); });
 
 /* ---------- render ---------- */
+const vis = () => tasks.filter(t=>t.category===tab);
+const bars = rows => { const m=Math.max(1,...rows.map(r=>r[1])); return rows.map(([l,n,c])=>`<div class="row"><span>${l}</span><div class="track"><div class="fill" style="width:${n/m*100}%;${c?`background:${c}`:''}"></div></div><span class="n">${n}</span></div>`).join(''); };
+const mini = t => `<div class="mini" onclick="openForm(${t.id})"><div>${t.done?'✅ ':''}${esc(t.task_name)} ${recChip(t)}<small>due ${fmt(t.due_date)}</small></div><div style="text-align:right">${starsHtml(t.priority)}<br>${dueHtml(t)}</div></div>`;
+const GREEN='linear-gradient(90deg,#22c55e,#16a34a)', AMBER='linear-gradient(90deg,#f59e0b,#d97706)', RED='linear-gradient(90deg,#ef4444,#dc2626)';
+
+function renderHead(){
+  const h=new Date().getHours();
+  $('hi').textContent=(h<12?'Good morning':h<18?'Good afternoon':'Good evening');
+  $('hiSub').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  ['Work','Personal'].forEach(c=>$('n'+c).textContent=tasks.filter(t=>t.category===c&&!t.done).length);
+  const s=dueSoon(), n=s.filter(t=>daysTo(t)<=0).length;
+  $('bellN').textContent=n||''; $('bellN').classList.toggle('z',!n);
+}
 function renderKpis(){
-  const open=tasks.filter(t=>!t.done);
+  const open=vis().filter(t=>!t.done);
   const over=open.filter(t=>daysTo(t)!==null&&daysTo(t)<0).length;
   const due0=open.filter(t=>daysTo(t)===0).length;
   const wk=open.filter(t=>{const d=daysTo(t);return d!==null&&d>=0&&d<=7}).length;
   const hi=open.filter(t=>t.priority>=4).length;
   $('kpis').innerHTML=`
-    <div class="kpi"><b>${open.length}</b><span>Open tasks</span></div>
+    <div class="kpi"><b>${open.length}</b><span>Open</span></div>
     <div class="kpi bad"><b>${over}</b><span>Overdue</span></div>
     <div class="kpi warn"><b>${due0}</b><span>Due today</span></div>
-    <div class="kpi warn"><b>${wk}</b><span>Due in 7 days</span></div>
-    <div class="kpi"><b>${hi}</b><span>High priority (4–5★)</span></div>
-    <div class="kpi ok"><b>${tasks.filter(t=>t.done).length}</b><span>Completed</span></div>`;
+    <div class="kpi warn"><b>${wk}</b><span>Next 7 days</span></div>
+    <div class="kpi"><b>${hi}</b><span>High priority 4–5★</span></div>
+    <div class="kpi ok"><b>${vis().filter(t=>t.done).length}</b><span>Completed</span></div>`;
 }
 function renderBoard(){
-  const q=$('q').value.toLowerCase(), ft=$('fType').value, fs=$('fStatus').value, so=$('fSort').value;
-  let r=tasks.filter(t=>(!ft||t.category===ft)&&(fs===''||(fs==='done')===t.done)&&(!q||(t.task_name+' '+(t.comments||'')).toLowerCase().includes(q)));
-  const far=1e9;
+  const q=$('q').value.toLowerCase(), fs=$('fStatus').value, so=$('fSort').value, far=1e9;
+  let r=vis().filter(t=>(fs===''||(fs==='done')===t.done)&&(!q||(t.task_name+' '+(t.comments||'')).toLowerCase().includes(q)));
   r.sort((a,b)=>{
     if(so==='prio') return b.priority-a.priority || (daysTo(a)??far)-(daysTo(b)??far);
     if(so==='new') return b.record_date.localeCompare(a.record_date) || b.id-a.id;
     if(so==='age') return a.record_date.localeCompare(b.record_date);
     return (daysTo(a)??far)-(daysTo(b)??far) || b.priority-a.priority;
   });
-  if(!r.length){ $('list').innerHTML='<div class="empty panel">No tasks to show. Tap <b>＋</b> to add one.</div>'; return; }
+  if(!r.length){ $('list').innerHTML=`<div class="empty">No ${tab.toLowerCase()} tasks here. Tap <b>＋</b> to add one.</div>`; return; }
   $('list').innerHTML=`<table><thead><tr>
-    <th></th><th>Task</th><th>Type</th><th>Priority</th><th>Record date</th><th>Due date</th><th>Days to due</th><th>Days on board</th><th>Comments</th><th></th></tr></thead><tbody>`+
+    <th></th><th>Task</th><th>Priority</th><th>Record date</th><th>Due date</th><th>Days to due</th><th>Days on board</th><th>Comments</th><th></th></tr></thead><tbody>`+
   r.map(t=>`<tr class="${t.done?'done':''}">
     <td class="nolabel"><input type="checkbox" class="chk" ${t.done?'checked':''} onchange="toggle(${t.id},this.checked)" aria-label="Done"></td>
-    <td class="name nolabel">${esc(t.task_name)}</td>
-    <td data-l="Type"><span class="chip ${t.category}">${t.category}</span></td>
+    <td class="name nolabel">${esc(t.task_name)}${recChip(t)}</td>
     <td data-l="Priority">${starsHtml(t.priority)}</td>
     <td data-l="Recorded">${fmt(t.record_date)}</td>
     <td data-l="Due">${fmt(t.due_date)}</td>
@@ -430,151 +426,44 @@ function renderBoard(){
     <td class="act nolabel"><button class="btn ghost sm" onclick="openForm(${t.id})">Edit</button> <button class="btn danger sm" onclick="del(${t.id})">Delete</button></td>
   </tr>`).join('')+'</tbody></table>';
 }
-const bars = rows => { const m=Math.max(1,...rows.map(r=>r[1])); return rows.map(([l,n,c])=>`<div class="row"><span>${l}</span><div class="track"><div class="fill" style="width:${n/m*100}%;${c?`background:${c}`:''}"></div></div><span class="n">${n}</span></div>`).join(''); };
-const mini = t => `<div class="mini"><div>${t.done?'✅ ':''}${esc(t.task_name)}<small>${t.category} · due ${fmt(t.due_date)}</small></div><div style="text-align:right">${starsHtml(t.priority)}<br>${dueHtml(t)}</div></div>`;
-
-function renderD1(){
-  const today=dayNum(todayStr()), rows=[];
-  for(let i=13;i>=0;i--){
-    const d=today-i, s=new Date(d*864e5).toISOString().slice(0,10);
-    rows.push([new Date(d*864e5).toLocaleDateString('en-GB',{day:'2-digit',month:'short',timeZone:'UTC'}), tasks.filter(t=>t.record_date===s).length]);
-  }
+function renderDue(){
+  const open=vis().filter(t=>!t.done), withDue=open.filter(t=>t.due_date);
+  const B=[['Overdue',d=>d<0,RED],['Today',d=>d===0,AMBER],['Tomorrow',d=>d===1,''],['Next 7 days',d=>d>=2&&d<=7,''],['Later',d=>d>7,GREEN]];
+  $('d3chart').innerHTML=bars(B.map(([l,f,c])=>[l,withDue.filter(t=>f(daysTo(t))).length,c]).concat([['No due date',open.length-withDue.length,'#94a3b8']]));
+  const sorted=t=>t.sort((a,b)=>a.due_date.localeCompare(b.due_date)||b.priority-a.priority);
+  const html=B.map(([l,f])=>{const a=sorted(withDue.filter(t=>f(daysTo(t))));return a.length?`<div class="grp"><h4 class="${l==='Overdue'?'over':''}"><span>${l}</span><span>${a.length}</span></h4>${a.map(mini).join('')}</div>`:'';}).join('');
+  const nd=open.filter(t=>!t.due_date);
+  $('d3list').innerHTML=(html||(nd.length?'':'<div class="empty">Nothing scheduled</div>'))+(nd.length?`<div class="grp"><h4><span>No due date</span><span>${nd.length}</span></h4>${nd.map(mini).join('')}</div>`:'');
+}
+function renderPrio(){
+  const all=vis(), open=all.filter(t=>!t.done);
+  $('d2chart').innerHTML=bars([5,4,3,2,1].map(p=>['★'.repeat(p),open.filter(t=>t.priority===p).length,p>=4?AMBER:'']));
+  $('d2list').innerHTML=[5,4,3,2,1].map(p=>{const a=open.filter(t=>t.priority===p).sort((x,y)=>(daysTo(x)??1e9)-(daysTo(y)??1e9));
+    return a.length?`<div class="grp"><h4><span>${starsHtml(p)}</span><span>${a.length}</span></h4>${a.map(mini).join('')}</div>`:'';}).join('')||'<div class="empty">No open tasks</div>';
+}
+function renderAdded(){
+  const all=vis(), today=dayNum(todayStr()), rows=[];
+  for(let i=13;i>=0;i--){ const d=today-i; rows.push([new Date(d*864e5).toLocaleDateString('en-GB',{day:'2-digit',month:'short',timeZone:'UTC'}), all.filter(t=>t.record_date===fromNum(d)).length]); }
   $('d1chart').innerHTML=bars(rows);
-  const g={}; tasks.forEach(t=>(g[t.record_date]=g[t.record_date]||[]).push(t));
+  const g={}; all.forEach(t=>(g[t.record_date]=g[t.record_date]||[]).push(t));
   const keys=Object.keys(g).sort().reverse();
-  $('d1list').innerHTML=keys.length?keys.map(k=>`<div class="grp"><h4><span>${fmt(k)}</span><span>${g[k].length} task${g[k].length>1?'s':''} · ${dayNum(todayStr())-dayNum(k)} d ago</span></h4>${g[k].map(mini).join('')}</div>`).join(''):'<div class="empty">No tasks yet</div>';
+  $('d1list').innerHTML=keys.length?keys.map(k=>`<div class="grp"><h4><span>${fmt(k)}</span><span>${g[k].length} task${g[k].length>1?'s':''} · ${today-dayNum(k)} d ago</span></h4>${g[k].map(mini).join('')}</div>`).join(''):'<div class="empty">No tasks yet</div>';
 }
-function renderD2(){
-  const open=tasks.filter(t=>!t.done);
-  $('d2chart').innerHTML=bars([5,4,3,2,1].map(p=>['★'.repeat(p),open.filter(t=>t.priority===p).length,p>=4?'linear-gradient(90deg,#f59e0b,#d97706)':'']));
-  $('d2list').innerHTML=[5,4,3,2,1].map(p=>{const a=tasks.filter(t=>t.priority===p).sort((x,y)=>(daysTo(x)??1e9)-(daysTo(y)??1e9));
-    return a.length?`<div class="grp"><h4><span>${starsHtml(p)}</span><span>${a.length} task${a.length>1?'s':''}</span></h4>${a.map(mini).join('')}</div>`:'';}).join('')||'<div class="empty">No tasks yet</div>';
-}
-function renderD3(){
-  const open=tasks.filter(t=>!t.done);
-  const b=[['Overdue',t=>daysTo(t)<0,'linear-gradient(90deg,#ef4444,#dc2626)'],['Today',t=>daysTo(t)===0,'linear-gradient(90deg,#f59e0b,#d97706)'],['Next 7 days',t=>daysTo(t)>0&&daysTo(t)<=7,''],['8–30 days',t=>daysTo(t)>7&&daysTo(t)<=30,'linear-gradient(90deg,#22c55e,#16a34a)'],['Later',t=>daysTo(t)>30,'linear-gradient(90deg,#22c55e,#16a34a)']];
-  $('d3chart').innerHTML=bars(b.map(([l,f,c])=>[l,open.filter(t=>t.due_date&&f(t)).length,c]));
-  const w=tasks.filter(t=>t.due_date).sort((a,b)=>a.due_date.localeCompare(b.due_date)||b.priority-a.priority);
-  const nd=open.filter(t=>!t.due_date).length;
-  $('d3list').innerHTML=(w.length?w.map(mini).join(''):'<div class="empty">No tasks with due dates</div>')+(nd?`<p class="h" style="margin-top:12px">${nd} open task${nd>1?'s have':' has'} no due date.</p>`:'');
-}
-function renderAll(){ renderKpis(); renderBoard(); renderD1(); renderD2(); renderD3(); }
+function renderAll(){ renderHead(); renderKpis(); renderBoard(); renderDue(); renderPrio(); renderAdded(); }
 
 /* ---------- wiring ---------- */
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
-  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));
-  document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.v));
-  window.scrollTo({top:0});
-});
-['q','fType','fStatus','fSort'].forEach(i=>$(i).addEventListener('input',renderBoard));
-$('today').textContent=new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeForm();});
-/* ---------- connection light & auth ---------- */
-const EMAIL_DOMAIN = "taskboard.app"; // placeholder domain: usernames map to username@taskboard.app, no email is sent
-const uname = v => (v||'').trim().toLowerCase();
-const okName = v => /^[a-z0-9._-]{3,30}$/.test(v);
-const toEmail = u => `${u}@${EMAIL_DOMAIN}`;
-function amsg(t,ok){const m=$('amsg');m.textContent=t||'';m.className='amsg'+(ok?' ok':'')+(t?' show':'');}
-function authTab(t){
-  document.querySelectorAll('.atabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
-  ['in','reg','rst'].forEach(x=>$('f_'+x).classList.toggle('on',x===t)); amsg('');
+function setTab(t){
+  tab=t; try{localStorage.setItem('taskboard_tab',t);}catch(e){}
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  renderAll();
 }
-document.querySelectorAll('.atabs button').forEach(b=>b.onclick=()=>authTab(b.dataset.t));
-
-function setConn(ok){
-  document.querySelectorAll('.dot').forEach(d=>d.classList.toggle('on',ok));
-  document.querySelectorAll('.ctext').forEach(t=>t.textContent=ok?'Connected':'Offline');
-}
-async function checkConn(){
-  if(!navigator.onLine){setConn(false);return;}
-  try{ const {error}=await sb.rpc('taskboard_ping'); setConn(!error||error.code==='PGRST202'); }
-  catch(e){ setConn(false); }
-}
-
-function genCode(){
-  const A='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', b=crypto.getRandomValues(new Uint8Array(16)); let s='';
-  b.forEach(x=>s+=A[x%32]); return s.match(/.{4}/g).join('-');
-}
-async function newRecovery(){
-  const code=genCode();
-  const {error}=await sb.rpc('taskboard_set_recovery',{p_code:code});
-  if(error){toast('Could not save recovery code: '+error.message);return;}
-  $('rc_code').textContent=code; $('rc_ok').checked=false; $('rc_go').disabled=true; $('rc').classList.add('show');
-}
-function copyCode(){
-  const c=$('rc_code').textContent;
-  (navigator.clipboard?navigator.clipboard.writeText(c):Promise.reject()).then(()=>toast('Code copied')).catch(()=>toast('Select the code and copy it manually'));
-}
-function openAcct(){
-  if(!USE_LOGIN){ $('dev_id').textContent=DEVICE_ID; $('dev_warn').style.display=deviceStored?'none':'block'; $('dev_new').value=''; $('dev').classList.add('show'); return; }
-  $('acct').classList.add('show');
-}
-function copyDevice(){
-  (navigator.clipboard?navigator.clipboard.writeText(DEVICE_ID):Promise.reject()).then(()=>toast('Device ID copied')).catch(()=>toast('Select the ID and copy it manually'));
-}
-function switchDevice(e){
-  e.preventDefault();
-  const v=$('dev_new').value.trim();
-  if(!/^[A-Za-z0-9-]{8,64}$/.test(v)) return toast('Not a valid device ID');
-  try{ localStorage.setItem(DEVICE_KEY,v); }catch(err){ return toast('This browser blocks storage, so the ID cannot be switched'); }
-  location.reload();
-}
-
-$('f_in').onsubmit=async e=>{
-  e.preventDefault(); amsg('');
-  const {error}=await sb.auth.signInWithPassword({email:toEmail(uname($('li_user').value)),password:$('li_pass').value});
-  if(error) amsg(/invalid|credentials/i.test(error.message)?'Wrong username or password.':error.message);
-  else $('li_pass').value='';
-};
-$('f_reg').onsubmit=async e=>{
-  e.preventDefault(); amsg('');
-  const u=uname($('rg_user').value), p=$('rg_pass').value;
-  if(!okName(u)) return amsg('Username: 3–30 characters, letters, numbers, . _ - only.');
-  if(p.length<6) return amsg('Password must be at least 6 characters.');
-  if(p!==$('rg_pass2').value) return amsg('Passwords don’t match.');
-  const {data,error}=await sb.auth.signUp({email:toEmail(u),password:p});
-  if(error) return amsg(/registered|exists/i.test(error.message)?'That username is already taken.':error.message);
-  if(!data.session) return amsg('Account created, but sign-in is blocked. In Supabase turn off Authentication → Providers → Email → “Confirm email”.');
-  $('rg_pass').value=$('rg_pass2').value='';
-  await newRecovery();
-};
-$('f_rst').onsubmit=async e=>{
-  e.preventDefault(); amsg('');
-  const u=uname($('rs_user').value), p=$('rs_pass').value;
-  if(p.length<6) return amsg('New password must be at least 6 characters.');
-  const {data,error}=await sb.rpc('taskboard_reset_password',{p_username:u,p_code:$('rs_code').value,p_new_password:p});
-  if(error) return amsg(error.message);
-  if(!data) return amsg('Username or recovery code is incorrect.');
-  $('li_user').value=u; $('rs_code').value=''; $('rs_pass').value='';
-  authTab('in'); amsg('Password updated. Sign in with your new password.',true);
-};
-$('cp').onsubmit=async e=>{
-  e.preventDefault();
-  const {error}=await sb.auth.updateUser({password:$('cp_pass').value});
-  toast(error?error.message:'Password changed'); if(!error) $('cp_pass').value='';
-};
-
-sb.auth.onAuthStateChange((ev,s)=>{
-  if(!USE_LOGIN) return;
-  if(ev==='SIGNED_OUT'||!s){
-    document.body.classList.remove('in'); tasks=[];
-    document.querySelectorAll('.ov').forEach(o=>o.classList.remove('show')); return;
-  }
-  if(ev==='INITIAL_SESSION'||ev==='SIGNED_IN'){
-    const n=(s.user.email||'').split('@')[0];
-    $('uname').textContent=n; $('who').textContent=n;
-    document.body.classList.add('in'); setTimeout(load,0);
-  }
-});
-window.addEventListener('online',checkConn);
-window.addEventListener('offline',()=>setConn(false));
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setTab(b.dataset.t));
+['q','fStatus','fSort'].forEach(i=>$(i).addEventListener('input',renderBoard));
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){closeForm();closePop();} });
+document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
 checkConn(); setInterval(checkConn,20000);
-
-if(!USE_LOGIN){
-  $('uname').textContent='Device '+DEVICE_ID.slice(0,6);
-  document.body.classList.add('in');
-  load();
-}
+setInterval(()=>{ if(tasks.length) renderAll(); },60*60*1000);
+load();
 </script>
 </body>
 </html>
