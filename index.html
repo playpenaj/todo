@@ -127,6 +127,35 @@ tr.done{opacity:.65}
 .st{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap}
 .pct{margin:12px 0 0;font-size:13px;color:var(--muted)}
 .more{font-size:12px;color:var(--muted);padding:6px 0}
+.dtable{display:block}.mlist,.swipehint{display:none}
+.mc{position:relative;border-radius:12px;overflow:hidden;margin-bottom:8px;background:#e2e8f0}
+.mc-bg{position:absolute;inset:0;display:flex;justify-content:space-between;align-items:center;padding:0 16px;font-weight:700;font-size:13px;color:#fff}
+.mc.dr .mc-bg{background:#d97706}.mc[data-nx="Completed"].dr .mc-bg{background:#16a34a}.mc.dl .mc-bg{background:#64748b}
+.mc-bg .r,.mc-bg .l{display:none}.mc.dr .r{display:block}.mc.dl .l{display:block}
+.mc-in{position:relative;background:#fff;border:1px solid var(--line);border-radius:12px;padding:9px 12px;touch-action:pan-y;transition:transform .18s;-webkit-user-select:none;user-select:none;cursor:pointer}
+.mc.drag .mc-in{transition:none}
+.mc-top{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.mc-name{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.mc.closed .mc-name{text-decoration:line-through;color:var(--muted)}
+.mc.closed .mc-in{opacity:.75}
+.mc-meta{display:flex;gap:10px;align-items:center;margin-top:3px;font-size:12px}
+.mc-meta .stars{font-size:12px}.mc-meta .d{font-size:12px}
+.stbtn{border:0;font:inherit;font-size:11px;font-weight:700;border-radius:99px;padding:3px 10px;cursor:pointer;white-space:nowrap}
+@media(max-width:820px){
+  .dtable{display:none}.mlist{display:block}
+  .swipehint{display:block;margin:0 0 10px;font-size:12px;color:var(--muted)}
+  main{padding:12px 10px 90px}
+  .hello{margin-bottom:10px}.hello h1{font-size:18px}.hello p{font-size:12px}
+  .kpis{grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+  .kpi{padding:8px 10px}.kpi b{font-size:20px}.kpi span{font-size:10px;letter-spacing:.2px}
+  .body{padding:0 10px 12px}
+  details.sec>summary{padding:12px 12px;font-size:15px}
+  details.sec>summary small{display:none}
+  .tools{gap:8px;margin-bottom:10px}
+  .tools input[type=search]{flex:1 1 100%}
+  .tools select{flex:1;min-width:0}
+  .row{grid-template-columns:84px 1fr 28px}
+}
 </style>
 </head>
 <body>
@@ -162,6 +191,7 @@ tr.done{opacity:.65}
           <option value="age">Sort: Oldest first</option>
         </select>
       </div>
+      <p class="swipehint">Swipe a task → to move it forward, ← to go back. Tap to edit.</p>
       <div id="list"></div>
     </div>
   </details>
@@ -224,6 +254,7 @@ tr.done{opacity:.65}
     </div>
     <div class="field"><label>Comments</label><textarea id="f_com" rows="3" placeholder="Notes, links, context…"></textarea></div>
     <div class="mact">
+      <button type="button" class="btn danger" id="delBtn" style="margin-right:auto;display:none" onclick="del(editId)">Delete</button>
       <button type="button" class="btn ghost" onclick="closeForm()">Cancel</button>
       <button class="btn" id="saveBtn">Save task</button>
     </div>
@@ -362,7 +393,7 @@ const toggle = (id,val) => setStatus(id, val?'Completed':'Not started');
 async function del(id){
   if(!confirm('Delete this task?')) return;
   const {error}=await sb.from(TABLE).delete().eq('id',id);
-  if(error) toast(error.message); else {toast('Task deleted');load();}
+  if(error) toast(error.message); else {closeForm();toast('Task deleted');load();}
 }
 
 /* ---------- form ---------- */
@@ -379,6 +410,7 @@ function openForm(id){
   $('f_due').value=t?.due_date||'';
   $('f_rep').value=t?.recurrence||'none';
   $('f_status').value=t?t.status:'Not started';
+  $('delBtn').style.display=t?'':'none';
   $('f_com').value=t?.comments||'';
   prio=t?t.priority:3; drawStars();
   closePop();
@@ -441,7 +473,7 @@ function renderBoard(){
     return (daysTo(a)??far)-(daysTo(b)??far) || b.priority-a.priority;
   });
   if(!r.length){ $('list').innerHTML=`<div class="empty">No ${tab.toLowerCase()} tasks here. Tap <b>＋</b> to add one.</div>`; return; }
-  $('list').innerHTML=`<table><thead><tr>
+  const tbl=`<table><thead><tr>
     <th></th><th>Task</th><th>Status</th><th>Priority</th><th>Record date</th><th>Due date</th><th>Days to due</th><th>Days on board</th><th>Comments</th><th></th></tr></thead><tbody>`+
   r.map(t=>`<tr class="${t.done?'done':''}">
     <td class="nolabel"><input type="checkbox" class="chk" ${t.done?'checked':''} onchange="toggle(${t.id},this.checked)" aria-label="Done"></td>
@@ -455,6 +487,15 @@ function renderBoard(){
     <td class="cm" data-l="Comments">${esc(t.comments)||'<span style="color:#b6c0cf">—</span>'}</td>
     <td class="act nolabel"><button class="btn ghost sm" onclick="openForm(${t.id})">Edit</button> <button class="btn danger sm" onclick="del(${t.id})">Delete</button></td>
   </tr>`).join('')+'</tbody></table>';
+  const cards=r.map(t=>{
+    const nx=stepOf(t,1), pv=stepOf(t,-1);
+    return `<div class="mc ${t.done?'closed':''}" data-id="${t.id}" data-nx="${nx||''}">
+      <div class="mc-bg"><span class="r">→ ${nx||'—'}</span><span class="l">← ${pv||'—'}</span></div>
+      <div class="mc-in" onclick="mcTap(event,${t.id})">
+        <div class="mc-top"><span class="mc-name">${esc(t.task_name)}</span><button type="button" class="stbtn st ${ST_CLS[t.status]||'ns'}">${t.status}</button></div>
+        <div class="mc-meta">${starsHtml(t.priority)}${dueHtml(t)}${t.recurrence&&t.recurrence!=='none'?'<span title="Repeats">🔁</span>':''}</div>
+      </div></div>`;}).join('');
+  $('list').innerHTML=`<div class="dtable">${tbl}</div><div class="mlist">${cards}</div>`;
 }
 function renderDue(){
   const open=vis().filter(t=>!t.done), withDue=open.filter(t=>t.due_date);
@@ -493,6 +534,55 @@ function renderStatus(){
 }
 function renderAll(){ renderHead(); renderKpis(); renderBoard(); renderStatus(); renderDue(); renderPrio(); renderAdded(); }
 
+/* ---------- swipe to change status (touch) ---------- */
+const FLOW=['Not started','In progress','Completed'];
+function stepOf(t,dir){
+  if(t.status==='Cancelled') return dir<0?'Not started':null;
+  return FLOW[FLOW.indexOf(t.status)+dir]||null;
+}
+function swipe(id,dir){
+  const t=tasks.find(x=>x.id===id); if(!t) return;
+  const to=stepOf(t,dir);
+  if(!to){ toast(t.status==='Cancelled'?'Cancelled. Open the task to reopen it':(dir>0?'Already completed':'Already at Not started')); return; }
+  if(navigator.vibrate) try{navigator.vibrate(15);}catch(e){}
+  setStatus(id,to);
+}
+let sw=null, swipedAt=0;
+function mcTap(ev,id){
+  if(Date.now()-swipedAt<400) return;
+  if(ev.target.closest('.stbtn')){ swipe(id,1); return; }
+  openForm(id);
+}
+$('list').addEventListener('pointerdown',e=>{
+  if(e.pointerType==='mouse') return;
+  const el=e.target.closest('.mc-in'); if(!el) return;
+  sw={el,mc:el.parentNode,x:e.clientX,y:e.clientY,dx:0,on:false};
+});
+document.addEventListener('pointermove',e=>{
+  if(!sw) return;
+  const dx=e.clientX-sw.x, dy=e.clientY-sw.y;
+  if(!sw.on){
+    if(Math.abs(dx)>12 && Math.abs(dx)>Math.abs(dy)*1.5){ sw.on=true; sw.mc.classList.add('drag'); }
+    else if(Math.abs(dy)>12){ sw=null; return; }
+    else return;
+  }
+  sw.dx=dx;
+  sw.el.style.transform=`translateX(${Math.max(-150,Math.min(150,dx))}px)`;
+  sw.mc.classList.toggle('dr',dx>0); sw.mc.classList.toggle('dl',dx<0);
+});
+function endSwipe(){
+  if(!sw) return;
+  const {el,mc,dx,on}=sw; sw=null;
+  el.style.transform=''; mc.classList.remove('drag');
+  if(!on) return;
+  swipedAt=Date.now();
+  const id=+mc.dataset.id;
+  if(dx>70) swipe(id,1); else if(dx<-70) swipe(id,-1);
+  setTimeout(()=>mc.classList.remove('dr','dl'),220);
+}
+document.addEventListener('pointerup',endSwipe);
+document.addEventListener('pointercancel',endSwipe);
+
 /* ---------- wiring ---------- */
 function setTab(t){
   tab=t; try{localStorage.setItem('taskboard_tab',t);}catch(e){}
@@ -503,6 +593,7 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>setTab(b.data
 ['q','fStatus','fSort'].forEach(i=>$(i).addEventListener('input',renderBoard));
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'){closeForm();closePop();} });
 document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===tab));
+if(window.innerWidth<=820) document.querySelectorAll('details.sec').forEach((d,i)=>{ if(i>=3) d.open=false; });
 checkConn(); setInterval(checkConn,20000);
 setInterval(()=>{ if(tasks.length) renderAll(); },60*60*1000);
 load();
